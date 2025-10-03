@@ -1,0 +1,16 @@
+Kapitel 1 - I/O ✅
+Kapitel 2 - Interrupts 
+    PCINT ✅
+    INT0/INT1 ✅
+    Timer ❗
+
+Kapitel 3 - ADC
+    Freilauf Modus/ADC mit avrlibc
+        simples auslesen von poti
+    Analog Komperator
+        überhaupt möglich mit dem board ohne extra Beschaltung ?
+    
+Kapitel 4 - PWM 
+Kapitel 5 - SPI 
+Kapitel 6 - USART
+Kapitel 7 - I2C
