@@ -5,15 +5,18 @@
 #include <stdlib.h>
 
 #include "screen.h"
+#include "adc.h"
 
 
 int8_t digit = 1;
 uint8_t up = 1;
 
+uint8_t adc_result = 0;
 
 int main ()
 {
     init_screen();
+    init_adc(&adc_result);
 
     uint8_t number = 1;
 
@@ -31,7 +34,10 @@ int main ()
 
         number = (number+1)%10;
         
-        _delay_ms(500);
+        for( uint8_t i = 0; i < adc_result+1; i++ )
+        {
+            _delay_ms(1);
+        }
     }
 }
 
