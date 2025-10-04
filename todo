@@ -5,7 +5,7 @@ Kapitel 2 - Interrupts
     Timer ❗
 
 Kapitel 3 - ADC
-    Freilauf Modus/ADC mit avrlibc
+    Freilauf Modus/ADC mit avrlibc ✅
         simples auslesen von poti
     Analog Komperator
         überhaupt möglich mit dem board ohne extra Beschaltung ?
