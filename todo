@@ -11,6 +11,9 @@ Kapitel 3 - ADC
         überhaupt möglich mit dem board ohne extra Beschaltung ?
     
 Kapitel 4 - PWM 
+    Invertierender Modus scheint den PIN nicht vollständig auf HIGH zu ziehen
+    Nicht Invertierende Modus funktioniert wie erwartet 
+ 
 Kapitel 5 - SPI 
 Kapitel 6 - USART
 Kapitel 7 - I2C
