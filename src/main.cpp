@@ -29,26 +29,26 @@ int main ()
     sei();
 
     // set to output
-    DDRB |= 1<<PB5;
+    DDRB |= 1<<PB2;
 
     // configure as fast pwm 8 bit mode => WGM13=0,WGM12=1,WGM11=0,WGM10=1
     TCCR1A |= (1<<WGM10);
     TCCR1B |= (1<<WGM12);
 
     // set to clear on compare match
-    TCCR1A |= (1<<COM1A1);
+    TCCR1A |= (1<<COM1B1);
     
     // set prescaler to 8 
     TCCR1B |= (1<<CS11);
 
     // set duty cycle
-    OCR1A = 0;
+    OCR1B = 0;
 
     while(1)
     {
         write_screen( bcd_to_7_seg[number], (1<<digit) );
 
-        OCR1A +=1;
+        OCR1B +=1;
 
         number = (number+1)%10;
         
