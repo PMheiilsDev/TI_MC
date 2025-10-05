@@ -24,7 +24,7 @@ int main ()
     PCICR |= (1 << PCIE1);
 
     // enable the interupt PCINT9 (that is a gpio function of PC1 )
-    PCMSK1 |= (1 << PCINT9);
+    PCMSK1 |= (1 << PCINT9) | (1<<PCINT10);
 
     sei();
 
@@ -35,8 +35,8 @@ int main ()
     TCCR1A |= (1<<WGM10);
     TCCR1B |= (1<<WGM12);
 
-    // set to clear on compare match
-    TCCR1A |= (1<<COM1B1);
+    // inverting mode
+    TCCR1A |= (1<<COM1B1) | (1<<COM1B0);
     
     // set prescaler to 8 
     TCCR1B |= (1<<CS11);
@@ -48,7 +48,7 @@ int main ()
     {
         write_screen( bcd_to_7_seg[number], (1<<digit) );
 
-        OCR1B +=1;
+        // OCR1B +=1;
 
         number = (number+1)%10;
         
@@ -63,21 +63,31 @@ int main ()
 // this is executed on all external interrupts from PORTC
 ISR(PCINT1_vect)
 {
-    if ( PINC & (1<<PINC1) )
-        return;
-
-    if ( digit <= 0 )
+    if ( !(PINC & (1<<PINC1)) )
     {
-        up = 1;
+        if ( digit <= 0 )
+        {
+            up = 1;
+        }
+        else if ( digit >= 3 )
+            up = 0;
+
+        if ( up )
+            digit++;
+        else
+            digit--;
     }
-    else if ( digit >= 3 )
-        up = 0;
 
-    if ( up )
-        digit++;
-    else
-        digit--;
 
+    if ( !(PINC & (1<<PINC2)) )
+    {
+        if ( OCR1B > 1 )
+            OCR1B = OCR1B * 10 / 11;
+        else if ( OCR1B == 1 )
+            OCR1B = 0;
+        else
+            OCR1B = 255;
+    }
 }
 
 
