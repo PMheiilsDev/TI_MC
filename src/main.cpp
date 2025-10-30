@@ -40,13 +40,16 @@ int main(void)
     // enable adc 
     // enable adc interupt
     // set prescaler to 64 
-    ADCSRA |= (1<<ADEN) | (1<<ADIE) | (1<<ADPS2) | (1<<ADPS1);
+    // enable autotrigger
+    ADCSRA |= (1<<ADEN) | (1<<ADATE) | (1<<ADIE) | (1<<ADPS2) | (1<<ADPS1);
 
-    // set to trigger on timer0 compare match A 
-    ADCSRB |= (1<<ADTS0) | (1<<ADTS1);
+    // // set to trigger on timer0 compare match A 
+    // ADCSRB |= (1<<ADTS0) | (1<<ADTS1);
 
     // set ad mux to A0
     ADMUX &= ~( (1<<MUX0) | (1<<MUX1) | (1<<MUX2) | (1<<MUX3) );
+
+    ADMUX |= (1<<REFS0);
 
     #pragma endregion
 
@@ -65,11 +68,12 @@ int main(void)
 
     OCR0A = 155;
     
-    // enable compA match interupt 
+    // // enable compA match interupt 
     TIMSK0 |= (1<<OCIE0A);
     
     #pragma endregion 
 
+    ADCSRA |= (1<<ADSC); 
 
     while(1)
     {
@@ -78,9 +82,11 @@ int main(void)
         {
             sum += adc_results[i];
         }
-        char buffer[10];
+        char buffer[20];
 
-        sprintf(buffer, "Value: %d\n", sum/adc_amt );
+        int avg = sum/adc_amt;
+
+        sprintf(buffer, "Value: %d\n", avg );
         Serial.print(buffer);
         _delay_ms(print_delay_ms);
     }
@@ -92,7 +98,7 @@ ISR(ADC_vect)
     adc_results[current_adc] = ADC;
 
     // increment to next position 
-    current_adc = (current_adc++)%adc_amt;
+    current_adc = (current_adc+1)%adc_amt;
 }
 
 ISR(TIMER0_COMPA_vect)
