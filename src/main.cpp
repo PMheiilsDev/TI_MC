@@ -2,44 +2,102 @@
 #include <avr/interrupt.h>
 #include "util/delay.h"
 
+#define CHEAT 
+#ifdef CHEAT
+#include "Arduino.h"
+#endif
+
+/*
+// TODO
+    make adc start every 10ms 
+    using timer0 interupt to start conversion
+    
+    configure adc ✅ 
+    set prescaler of adc to 64 as that works 
+
+    allowed to use Serial object 
+    main loop waits 1.5 s then writes avg ✅ 
+*/
+
+const uint16_t print_delay_ms = 1500;
+
+const uint8_t adc_amt = 10;
+uint8_t current_adc = 0;
+
+uint16_t adc_results[adc_amt];
+
 int main(void)
 {
-    // LED on PC0
-    DDRC |= (1 << PC0);
+    init();
+    Serial.begin(9600);
 
-    // Turn off ADC (required for ACME!)
-    ADCSRA &= ~(1 << ADEN);
+    #pragma region adc setup
+    // reset used registers after init call 
+    ADCSRA = 0;
+    ADCSRB = 0;
+    ADMUX = 0;
 
-    // Select ADC4 as inverting input for comparator
-    ADMUX = (ADMUX & 0xF0) | 0x04;
+    // enable adc 
+    // enable adc interupt
+    // set prescaler to 64 
+    ADCSRA |= (1<<ADEN) | (1<<ADIE) | (1<<ADPS2) | (1<<ADPS1);
 
-    // Enable AC multiplexer
-    ADCSRB |= (1 << ACME);
+    // set to trigger on timer0 compare match A 
+    ADCSRB |= (1<<ADTS0) | (1<<ADTS1);
 
-    // Disable digital input buffers on comparator pins
-    DIDR1 |= (1 << AIN0D) | (1 << AIN1D);
+    // set ad mux to A0
+    ADMUX &= ~( (1<<MUX0) | (1<<MUX1) | (1<<MUX2) | (1<<MUX3) );
 
-    // Configure Comparator in ONE write:
-    // ACD=0  (enable comparator)
-    // ACBG=0 (use external AIN0)
-    // ACIE=1 (interrupt enable)
-    // ACIS1=0, ACIS0=0 (any edge)
-    ACSR = (1<<ACIE) ;
+    #pragma endregion
 
-    // Enable global interrupts
-    sei();
 
-    while (1)
+    #pragma region timer0 setup 
+    // reset used registers after init call 
+    TCCR0A = 0;
+    TCCR0B = 0;
+    TIMSK0  = 0;
+
+
+    TCCR0A |= (1<<WGM01);
+
+    // set prescaler to 1024 
+    TCCR0B |= (1<<CS00) | (1<<CS02);
+
+    OCR0A = 155;
+    
+    // enable compA match interupt 
+    TIMSK0 |= (1<<OCIE0A);
+    
+    #pragma endregion 
+
+
+    while(1)
     {
-        // do nothing, ISR toggles LED
+        uint32_t sum = 0;
+        for ( uint8_t i = 0; i < adc_amt; i++ )
+        {
+            sum += adc_results[i];
+        }
+        char buffer[10];
+
+        sprintf(buffer, "Value: %d\n", sum/adc_amt );
+        Serial.print(buffer);
+        _delay_ms(print_delay_ms);
     }
 }
 
-ISR(ANALOG_COMP_vect)
+ISR(ADC_vect)
 {
-    if ( ACSR >>ACO )
-        PORTC |= (1 << PC0);
-    else
-        PORTC &= ~(1<<PC0);
+    // store result 
+    adc_results[current_adc] = ADC;
+
+    // increment to next position 
+    current_adc = (current_adc++)%adc_amt;
 }
-#include "SPI.h"
+
+ISR(TIMER0_COMPA_vect)
+{
+    // start conversion
+    ADCSRA |= (1<<ADSC);
+}
+
