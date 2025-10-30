@@ -1,94 +1,45 @@
-#include "avr/io.h"
-#include "avr/interrupt.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
 #include "util/delay.h"
 
-#include <stdlib.h>
-
-#include "screen.h"
-#include "adc.h"
-
-
-int8_t digit = 1;
-uint8_t up = 1;
-
-uint8_t adc_result = 0;
-
-int main ()
+int main(void)
 {
-    init_screen();
-    init_adc(&adc_result);
+    // LED on PC0
+    DDRC |= (1 << PC0);
 
-    uint8_t number = 1;
+    // Turn off ADC (required for ACME!)
+    ADCSRA &= ~(1 << ADEN);
 
-    // enable interrups that are in PCMSK1 register (PORTC) 
-    PCICR |= (1 << PCIE1);
+    // Select ADC4 as inverting input for comparator
+    ADMUX = (ADMUX & 0xF0) | 0x04;
 
-    // enable the interupt PCINT9 (that is a gpio function of PC1 )
-    PCMSK1 |= (1 << PCINT9) | (1<<PCINT10);
+    // Enable AC multiplexer
+    ADCSRB |= (1 << ACME);
 
+    // Disable digital input buffers on comparator pins
+    DIDR1 |= (1 << AIN0D) | (1 << AIN1D);
+
+    // Configure Comparator in ONE write:
+    // ACD=0  (enable comparator)
+    // ACBG=0 (use external AIN0)
+    // ACIE=1 (interrupt enable)
+    // ACIS1=0, ACIS0=0 (any edge)
+    ACSR = (1<<ACIE) ;
+
+    // Enable global interrupts
     sei();
 
-    // set to output
-    DDRB |= 1<<PB2;
-
-    // configure as fast pwm 8 bit mode => WGM13=0,WGM12=1,WGM11=0,WGM10=1
-    TCCR1A |= (1<<WGM10);
-    TCCR1B |= (1<<WGM12);
-
-    // inverting mode
-    TCCR1A |= (1<<COM1B1) | (1<<COM1B0);
-    
-    // set prescaler to 8 
-    TCCR1B |= (1<<CS11);
-
-    // set duty cycle
-    OCR1B = 0;
-
-    while(1)
+    while (1)
     {
-        write_screen( bcd_to_7_seg[number], (1<<digit) );
-
-        // OCR1B +=1;
-
-        number = (number+1)%10;
-        
-        for( uint8_t i = 0; i < adc_result+1; i++ )
-        {
-            _delay_ms(1);
-        }
+        // do nothing, ISR toggles LED
     }
 }
 
-
-// this is executed on all external interrupts from PORTC
-ISR(PCINT1_vect)
+ISR(ANALOG_COMP_vect)
 {
-    if ( !(PINC & (1<<PINC1)) )
-    {
-        if ( digit <= 0 )
-        {
-            up = 1;
-        }
-        else if ( digit >= 3 )
-            up = 0;
-
-        if ( up )
-            digit++;
-        else
-            digit--;
-    }
-
-
-    if ( !(PINC & (1<<PINC2)) )
-    {
-        if ( OCR1B > 1 )
-            OCR1B = OCR1B * 10 / 11;
-        else if ( OCR1B == 1 )
-            OCR1B = 0;
-        else
-            OCR1B = 255;
-    }
+    if ( ACSR >>ACO )
+        PORTC |= (1 << PC0);
+    else
+        PORTC &= ~(1<<PC0);
 }
-
-
-
+#include "SPI.h"
