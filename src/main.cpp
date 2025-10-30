@@ -41,7 +41,7 @@ int main(void)
     // enable adc interupt
     // set prescaler to 64 
     // enable autotrigger
-    ADCSRA |= (1<<ADEN) | (1<<ADATE) | (1<<ADIE) | (1<<ADPS2) | (1<<ADPS1);
+    ADCSRA |= (1<<ADEN) | (1<<ADIE) | (1<<ADPS2) | (1<<ADPS1);
 
     // // set to trigger on timer0 compare match A 
     // ADCSRB |= (1<<ADTS0) | (1<<ADTS1);
