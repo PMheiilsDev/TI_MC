@@ -2,10 +2,10 @@
 #include <avr/interrupt.h>
 #include "util/delay.h"
 
-#define CHEAT 
-#ifdef CHEAT
-#include "Arduino.h"
-#endif
+#include <stdio.h>
+
+#include "uart.h"
+
 
 /*
 // TODO
@@ -28,14 +28,9 @@ uint16_t adc_results[adc_amt];
 
 int main(void)
 {
-    init();
-    Serial.begin(9600);
+    uart0_init();
 
     #pragma region adc setup
-    // reset used registers after init call 
-    ADCSRA = 0;
-    ADCSRB = 0;
-    ADMUX = 0;
 
     // enable adc 
     // enable adc interupt
@@ -55,11 +50,6 @@ int main(void)
 
 
     #pragma region timer0 setup 
-    // reset used registers after init call 
-    TCCR0A = 0;
-    TCCR0B = 0;
-    TIMSK0  = 0;
-
 
     TCCR0A |= (1<<WGM01);
 
@@ -82,13 +72,14 @@ int main(void)
         {
             sum += adc_results[i];
         }
+        
         char buffer[20];
 
         int avg = sum/adc_amt;
 
-        sprintf(buffer, "Value: %d\n", avg );
-        Serial.print(buffer);
-        _delay_ms(print_delay_ms);
+        uint8_t len = snprintf( buffer, 20, "Value: %d\n", avg );
+        uart0_write_bytes_blocking( buffer, len );
+        _delay_ms( print_delay_ms );
     }
 }
 
