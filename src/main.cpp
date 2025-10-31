@@ -6,6 +6,7 @@
 
 #include "uart.h"
 
+#include "Arduino.h"
 
 /*
 // TODO
@@ -64,6 +65,8 @@ int main(void)
     #pragma endregion 
 
     ADCSRA |= (1<<ADSC); 
+
+    sei();
 
     while(1)
     {
