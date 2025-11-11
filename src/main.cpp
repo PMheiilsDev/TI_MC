@@ -6,7 +6,7 @@
 
 #include "uart.h"
 
-#include "Arduino.h"
+// #include "Arduino.h"
 
 /*
 // TODO
@@ -20,9 +20,9 @@
     main loop waits 1.5 s then writes avg ✅ 
 */
 
-const uint16_t print_delay_ms = 1500;
+const uint16_t print_delay_ms = 500;
 
-const uint8_t adc_amt = 10;
+const uint8_t adc_amt = 15;
 uint8_t current_adc = 0;
 
 uint16_t adc_results[adc_amt];
@@ -31,7 +31,7 @@ int main(void)
 {
     uart0_init();
 
-    #pragma region adc setup
+    /* #region adc setup */
 
     // enable adc 
     // enable adc interupt
@@ -47,10 +47,10 @@ int main(void)
 
     ADMUX |= (1<<REFS0);
 
-    #pragma endregion
+    /* #endregion */
 
 
-    #pragma region timer0 setup 
+    /* #region timer0 setup */
 
     TCCR0A |= (1<<WGM01);
 
@@ -62,7 +62,7 @@ int main(void)
     // // enable compA match interupt 
     TIMSK0 |= (1<<OCIE0A);
     
-    #pragma endregion 
+    /* #endregion */
 
     ADCSRA |= (1<<ADSC); 
 
@@ -70,6 +70,7 @@ int main(void)
 
     while(1)
     {
+        _delay_ms( print_delay_ms );
         uint32_t sum = 0;
         for ( uint8_t i = 0; i < adc_amt; i++ )
         {
@@ -82,7 +83,6 @@ int main(void)
 
         uint8_t len = snprintf( buffer, 20, "Value: %d\n", avg );
         uart0_write_bytes_blocking( buffer, len );
-        _delay_ms( print_delay_ms );
     }
 }
 
